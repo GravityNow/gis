@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>A Leaflet map!</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Leaflet and MarkerCluster CDN links -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"/>
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.0.5/dist/MarkerCluster.Default.css"/>
+  <script src="https://unpkg.com/leaflet.markercluster@1.0.5/dist/leaflet.markercluster.js"></script>
+
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #map { height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    var map = L.map('map').setView([39.9526, -75.1652], 13);
+
+    // Add MapBox Streets basemap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Load ACS GeoJSON with custom style
+    $.getJSON("acs.geojson", function(data) {
+      L.geoJson(data, {
+        style: function(feature) {
+          return { color: "blue", weight: 2, fillOpacity: 0.5 };
+        },
+        onEachFeature: function(feature, layer) {
+          layer.bindPopup("<strong>" + feature.properties.name + "</strong><br/>" + feature.properties.population + " people");
+        }
+      }).addTo(map);
+    });
+
+    // Load bike GeoJSON with custom markers
+    $.getJSON("bike.geojson", function(data) {
+      var bikeIcon = L.icon({
+        iconUrl: 'icon.png',  
+        iconSize: [40, 40]
+      });
+
+      var clusters = L.markerClusterGroup();
+
+      var bikeMarkers = L.geoJson(data, {
+        pointToLayer: function(feature, latlng) {
+          var marker = L.marker(latlng, { icon: bikeIcon });
+          marker.bindPopup("Bike Station: " + feature.properties.name);
+          return marker;
+        }
+      });
+
+      clusters.addLayer(bikeMarkers);
+      map.addLayer(clusters);
+    });
+  </script>
+</body>
+</html>
